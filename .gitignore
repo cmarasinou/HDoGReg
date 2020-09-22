@@ -1,0 +1,11 @@
+# Don't track these directories
+runs/
+mlruns/
+output/
+
+# Jupyter NB Checkpoints
+.ipynb_checkpoints/
+
+
+# Mac OS-specific storage files
+.DS_Store

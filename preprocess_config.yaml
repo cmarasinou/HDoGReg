@@ -1,0 +1,10 @@
+default: &DEFAULT 
+  data_dir: '../../Data/INbreast-pytorch/'
+  patches_dir: '../../Data/INbreast-patches-512-split20-png-temp2/'
+  target_csv: 'csv.csv' 
+  train_csv: 'train_by_patient_20.csv' 
+  val_csv:  'val_by_patient_20.csv' 
+  mask_col: 'mask_image_filled'
+  kernel_size: 512
+  stride: 480
+  num_workers: 8

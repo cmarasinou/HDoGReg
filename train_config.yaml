@@ -1,0 +1,19 @@
+default: &DEFAULT 
+  data_dir: '../../Data/INbreast-patches-512-split20/'
+  train_csv: 'train.csv'
+  val_csv: 'val.csv'
+  # model name without `.pth`
+  model_name: 'baseline'
+  batch_size: 8
+  # learning rate
+  lr: 0.0001 
+  n_epochs: 40
+  # weight decay
+  wd: 0.0
+  resume_training: False
+  comment: ''
+  gpu_number: 0 
+  num_workers: 8
+  # proximity function 
+  radius: 10
+  alpha: 1.0

@@ -1,0 +1,8 @@
+# Adapted from repository https://github.com/anibali/docker-pytorch
+FROM nvcr.io/nvidia/pytorch:19.02-py3
+
+# Installing extra packages required
+RUN pip install -U segmentation-models-pytorch albumentations ray seaborn mlflow pydicom ruamel.yaml
+
+# Set the default command to python3
+CMD ["bash"]

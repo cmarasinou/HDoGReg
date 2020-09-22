@@ -1,0 +1,59 @@
+default: &DEFAULT 
+  data_dir: '/home/cmarasinou/Documents/Data/INbreast-pytorch/'
+  out_dir: '/home/cmarasinou/Documents/Projects/mammography/output/'
+  val_csv: 'val_by_patient_20.csv'
+  model_name: 'baseline'
+  comment: '' #split with <br>
+  mask_col: 'mask_image_filled'
+  # Attributes for On the fly Exponential proximity function creation
+  radius: 10
+  thr_radius: 3 # To determine the threshold
+  alpha: 1.0
+  kernel_size: 512
+  n_initial_filters: 16
+  metrics: ['IoURegression']
+  input_norm: 1.0
+  img_format: 'png16'
+  overwrite_images: False
+  net_architecture: 'FusionGenerator'
+  erosion: 30
+  num_workers: 8
+  gpu_number: 0 
+  preprocessing: False
+  batch_size: 1
+
+
+
+
+confusion_matrix: 
+  <<: *DEFAULT
+  # Defining the grid of parameters
+  save_dir: '/home/cmarasinou/Documents/Projects/mammography/output/'
+  threshold: [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5]
+  #threshold: [100000.]
+  min_overlap: 0.2
+  small_area: 1
+  iou_thr: 0.3
+  distance_thr: 5
+  evaluate_dots_separately: True
+  out_csv_file: 'baseline.csv'
+  # DoG params
+  DoG_thr: 0.01
+  min_sigma: 1.6
+  max_sigma: 2.0
+  overlap: 0.0
+  hessian_thr: 1.4
+  # FROC
+  graph_only: false # If data already exist and just need plot
+  resolution: 0.007 # Needed for using per_unit_area
+  per_unit_area: True #FROC x-axis is FP per cm^2, if false FP per image
+  # Preprocess params
+  preprocess_func_name: 'no_preprocessing'
+  gamma: 3
+  hybrid_combining: 'multiplication'
+  hybrid_combining_overlap: 0.1
+  # For using classification models
+  regression: True
+  pred_dir: ""
+  certain_region_length: 0 # If we want to evaluate within a distance from annotation
+  use_pred_dir: False
