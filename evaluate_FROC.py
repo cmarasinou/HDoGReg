@@ -1,3 +1,5 @@
+# For evaluating HDoGReg with FROC analysis
+
 import matplotlib
 # To avoid using Xwindows backend
 matplotlib.use('Agg') 
@@ -18,9 +20,10 @@ from scipy import ndimage
 from hdogreg.image import  overlap_based_combining, hybrid_approach
 from hdogreg.dataset import ImageDataset, bboxInImage
 from hdogreg.metrics import get_confusion_matrix_2
+from hdogreg.utils import arg_parsing
+
 import pandas as pd
 import pickle
-import argparse
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -38,21 +41,6 @@ def logging_params(params_list):
 def logging_metrics(metrics_dict):
     for name, value in metrics_dict.items():
         mlflow.log_metric(name, value)
-
-
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        if key == 'threshold':
-            # threshold is a list of threshold values
-            arg_parser.add_argument('-{}'.format(key), nargs='+', type=float) 
-        else: 
-            arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
 
 def make_froc_data(data_computed, total_area=None):
     if total_area is not None:

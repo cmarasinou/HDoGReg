@@ -11,32 +11,38 @@ from skimage.measure import regionprops
 import random
 from hdogreg.image import get_bounding_boxes
 
-def png16_saver(img, path):
-    """Saves image previously normalized to 1 as png at 16 bits
-    """
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-    bits = 16
-    norm = 2**bits-1
-    img = (img*norm).astype(np.uint32)
-    img = Image.fromarray(img)
-    if path[-4:]!='.png':
-        path=path+'.png'
-    img.save(path)
-
-def bboxInImage(bb, img_size):
-    
-    h,w = img_size
-    x1, x2, y1, y2 = bb
-    
-    if x1<0 or x2>h-1 or y1<0 or y2>w-1:
-        return False
-    
-    return True
+############################
+# DATASET DEFINITIONS 
+############################
 
 class ImageDataset(Dataset):
     """Pytorch Dataset that can return images and tabular data. Images 
-    can be returned as numpy arrays or torch tensors."""
+    can be returned as numpy arrays or torch tensors.
+    Args:
+        root_dir (str): data directory path
+        csv_file (str): csv file name in root_dir/others/
+        img_format (str, optional): has to correspond to one of the 
+            directories in /root_dir/images/. Regular options: 'png8', 
+            'png16', 'dcm', 'npy'
+        sample_size (float, 0.0-1.0, optional): sample fraction, sample
+            is being drawn randomly
+        images_list (list of str, optional): items correspond to the 
+            columns in csv_file associated with file_names
+        attributes_list (list of str, optional): items correspond to the
+            columns in csv_file. For returning only values in csv_file.
+        torch_tensor (bool, optional): If True images are given as torch.
+            tensor, otherwise np.array
+        transforms (torchvision.transforms, optional): Applied on images
+            when in PIL format
+        np_transforms (object, optional): Takes lists of np.array and
+            transforms them
+        tensor_norm (float, optional): If the output is a tensor, image 1 is normalized.
+            if tensor_norm>0 then out = out * tensor_norm
+            if tensor_norm == 0 then out = standardized(out)
+            if tensor_norm <0 then out = abs(2*tensor_norm)*tensor_norm+tensor_norm, symmetric about 0
+        alb_transforms (albumentations.Compose, optional): They transform both iamge and mask
+        crop (tuple, 2-dim): if not None random cropping occurs to the size determined by `crop`
+    """
 
     def __init__(self, root_dir,
                 csv_file,
@@ -51,31 +57,7 @@ class ImageDataset(Dataset):
                 alb_transforms = None,
                 crop = None
                 ):
-        """
-        Args:
-            root_dir (str): data directory path
-            csv_file (str): csv file name in root_dir/others/
-            img_format (str, optional): has to correspond to one of the 
-                directories in /root_dir/images/. Regular options: 'png8', 
-                'png16', 'dcm', 'npy'
-            sample_size (float, 0.0-1.0, optional): sample fraction, sample
-                is being drawn randomly
-            images_list (list of str, optional): items correspond to the 
-                columns in csv_file associated with file_names
-            attributes_list (list of str, optional): items correspond to the
-                columns in csv_file. For returning only values in csv_file.
-            torch_tensor (bool, optional): If True images are given as torch.
-                tensor, otherwise np.array
-            transforms (torchvision.transforms, optional): Applied on images
-                when in PIL format
-            np_transforms (object, optional): Takes lists of np.array and
-                transforms them
-            tensor_norm (float, optional): If the output is a tensor, image 1 is normalized.
-                if tensor_norm>0 then out = out * tensor_norm
-                if tensor_norm == 0 then out = standardized(out)
-                if tensor_norm <0 then out = abs(2*tensor_norm)*tensor_norm+tensor_norm, symmetric about 0
-            alb_transforms (albumentations package transforms): They transform both iamge and mask
-        """
+
         self.root_dir = os.path.abspath(root_dir)
         self.csv_file = csv_file
         self.img_format = img_format
@@ -285,18 +267,36 @@ class ImageDataset(Dataset):
 class MakePatchesGeneral(Dataset):
     """Creates and saves a new dataset consisting of patches drawn from an
     existing dataset
+    Args:
+        dataset (torch.Dataset): The initial dataset
+        new_data_dir (str): Directory path for the new patches dataset. Doesn't
+            have to exist.
+        img_rel_dir (str, optional): Directory path of new dataset's 
+            images within `new_data_dir`
+        img_saver (str, optional): Options `png16_saver`, `npy_saver`
+        getboundingboxes_func (str, optional): Corresponds to function 
+            defined with this name. Function takes the images as input
+            (full_image & mask) and returns a set of bounding boxes
+            based on a set of rules. Options `get_roi_bboxes`, 
+            `get_bbox_positive`, `get_bbox_positive_and_negative`, 
+            `get_roi_bboxes_centered`, `get_context_bboxes`
+        bb_kargs (dict, optional): keyword arguments for `getboundingboxes_func`
+        img_name_func (str, optional): Corresponds to function 
+            defined with this name. Function takes full image_names as input
+            and decides what  the prefix of the names of the patches will be.
+            Prefix will be followed by some numbering of the patch belonging to 
+            the same image. Options `idx_transformation`, `default_naming`,
+            `separate_dir_naming`, `image_and_mask`
+        save_patches_func (str, optional): Corresponds to function that saves all
+            patches of an image
+        save_kargs (dict, optional): keyword arguments for `save_patches_func`
     """
     def __init__(self, dataset, new_data_dir, img_rel_dir='images/png16/', 
                  img_saver='png16_saver',
                  getboundingboxes_func='get_roi_bboxes', bb_kargs={},
                 img_name_func='idx_transformation', 
                 save_patches_func='save_patches_regular', save_kargs={}):
-        """
-        Args:
-            dataset (torch.Dataset): The initial dataset
-            new_data_dir (str): Directory path for the new dataset. Doesn't
-                have to exist.
-        """
+        
         self.ds = dataset
         self.new_data_dir = new_data_dir
         self.img_dir = os.path.join(self.new_data_dir, img_rel_dir)
@@ -337,8 +337,54 @@ class MakePatchesGeneral(Dataset):
         except OSError:
             print("Directories not created")
 
+############################
+# HELPER FUNCTIONS 
+############################
+
+def png16_saver(img, path):
+    """Saves image previously normalized to 1 as png at 16 bits
+    Args:
+        img (np.array, 2-dim): normalized to range [0,1]
+        path (str): path to write the image
+    """
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+    bits = 16
+    norm = 2**bits-1
+    img = (img*norm).astype(np.uint32)
+    img = Image.fromarray(img)
+    if path[-4:]!='.png':
+        path=path+'.png'
+    img.save(path)
+
+def bboxInImage(bb, img_size):
+    """Finds if bounding box within image
+    Args:
+        bb (list of (x, xp,y, yp)): convention of bounding box
+        (top, bottom, left, right)
+        img_size (tuple): image shape
+    Returns:
+        bool: True if bounding box in image
+    """
+    
+    h,w = img_size
+    x1, x2, y1, y2 = bb
+    
+    if x1<0 or x2>h-1 or y1<0 or y2>w-1:
+        return False
+    
+    return True
+
 
 def LocationInBbox(loc, bb):
+    """Determines if a location is within a bounding box
+    Args:
+        loc (list as (x,y)): (row,column)
+        bb (list as (x, xp,y, yp)): convention of bounding box
+        (top, bottom, left, right)
+    Returns:
+        bool: True if location within bounding box
+    """
     x,y = loc
     x1, x2, y1, y2 = bb
     if (x>=x1)&(x<=x2)&(y>=y1)&(y<=y2):
@@ -346,6 +392,14 @@ def LocationInBbox(loc, bb):
     return False
 
 def PatchesFromBboxes(img, bboxes):
+    """Extracts multiple patches from an image
+    Args:
+        img (np.array, 2-dim)
+        bb (list of (x, xp,y, yp)): convention of bounding box
+        (top, bottom, left, right)
+    Returns:
+        patches (list of np.arrays)
+    """
     patches = []
     for bb in bboxes:
         patches.append(img[bb[0]:bb[1],bb[2]:bb[3]])
@@ -357,7 +411,8 @@ def npy_saver(img, path):
     np.save(path+'.npy',img)
 
 def get_roi_bboxes(imgs, size=512):
-    """Extracts ROI bboxes based on objects appearing in the mask
+    """Extracts ROI bboxes centered on objects appearing in the mask.
+    imgs[1] is the mask, size: the kernel size
     """
     mask = imgs[1]
     label, n_objects = ndimage.label(mask)
@@ -373,6 +428,10 @@ def get_roi_bboxes(imgs, size=512):
     return bbox_list
 
 def get_bbox_positive(imgs, kernel_size=512, stride=480):
+    """Extracts ROI bboxes using sliding window and keeping the ones
+    with positive objects.
+    imgs[1] is the mask
+    """
     mask = imgs[1]
     bbList = get_bounding_boxes(mask,kernel_size, stride)
     bbListFiltered = []
@@ -384,6 +443,9 @@ def get_bbox_positive(imgs, kernel_size=512, stride=480):
 
 
 def get_bbox_positive_and_negative(imgs, kernel_size=512, stride=480, ratio=1):
+    """Extracts ROI bboxes using sliding window with a negative to positive ratio
+    imgs[1] is the mask
+    """
     img, mask = imgs
     bbList = get_bounding_boxes(mask,kernel_size, stride)
     bbListFiltered = []
@@ -423,36 +485,37 @@ def get_roi_bboxes_centered(imgs, size=512):
 
 
 def get_context_bboxes(imgs, k=20):
-        
-        size = 95
-        mini_size=9
-        n_pos_max = 150
-        img, mask = imgs[0],imgs[1]
-        # produce positive bboxes
-        label, n_objects = ndimage.label(mask)
-        regions = regionprops(label)
-        bbox_list = []
-        for region in regions:
-            centroid = region.centroid
-            x, y = int(centroid[0]), int(centroid[1])
-            bbox = [x-size//2,x+size//2+1,y-size//2,y+size//2+1]
-            # check if within image
-            if bboxInImage(bbox,mask.shape):
-                # check overlap of mask in mini box
-                mini_bbox = [x-mini_size//2,x+mini_size//2+1,
-                             y-mini_size//2,y+mini_size//2+1]
-                if maskOverlap(mini_bbox, mask):
-                    bbox_list.append(bbox)
-        # keep only n_pos_max
-        if len(bbox_list)>n_pos_max:
-            bbox_list = random.sample(bbox_list,n_pos_max)
-        # produce negative bboxes
-        n_pos = len(bbox_list)
-        n_neg = k*n_pos
-        for i in range(0,n_neg):
-            bbox_list.append(random_negative_bbox(img, mask, size))
+    """Extracts 95*95 bboxes based on the criteria in Wang and Yang 2018.
+    """
+    size = 95
+    mini_size=9
+    n_pos_max = 150
+    img, mask = imgs[0],imgs[1]
+    # produce positive bboxes
+    label, n_objects = ndimage.label(mask)
+    regions = regionprops(label)
+    bbox_list = []
+    for region in regions:
+        centroid = region.centroid
+        x, y = int(centroid[0]), int(centroid[1])
+        bbox = [x-size//2,x+size//2+1,y-size//2,y+size//2+1]
+        # check if within image
+        if bboxInImage(bbox,mask.shape):
+            # check overlap of mask in mini box
+            mini_bbox = [x-mini_size//2,x+mini_size//2+1,
+                         y-mini_size//2,y+mini_size//2+1]
+            if maskOverlap(mini_bbox, mask):
+                bbox_list.append(bbox)
+    # keep only n_pos_max
+    if len(bbox_list)>n_pos_max:
+        bbox_list = random.sample(bbox_list,n_pos_max)
+    # produce negative bboxes
+    n_pos = len(bbox_list)
+    n_neg = k*n_pos
+    for i in range(0,n_neg):
+        bbox_list.append(random_negative_bbox(img, mask, size))
 
-        return bbox_list
+    return bbox_list
 
 def random_negative_bbox(img,mask,size):
     h,w = img.shape
@@ -470,6 +533,8 @@ def random_negative_bbox(img,mask,size):
         return random_negative_bbox(img, mask,size)
 
 def idx_transformation(img_names,idx):
+    """Image names are decided by the index
+    """
     img_names=("full_image_{}".format(idx),
                 "mask_image_{}".format(idx),
                 
@@ -478,16 +543,26 @@ def idx_transformation(img_names,idx):
     return img_names
 
 def default_naming(img_names,idx):
+    """Image names stay the same
+    """
     return img_names
 
 def separate_dir_naming(img_names,idx):
+    """Image names for image and mask are same. The directory of image is
+    different from mask.
+    """
     img_name = img_names[0]
     return ['imgs/'+img_name, 'masks/'+img_name]
 
 def image_and_mask(img_names,idx):
+    """Mask name is `image_name`+`_mask`
+    """
     return (img_names[0], img_names[0]+'_mask')
 
 def save_patches_regular(imgs, img_names, bbox_list, img_saver, img_dir):
+    """ Saving patches from all `imgs` given a list of bounding boxes `bboxes`,
+    image names `img_names`, an image saver and saving directory
+    """
     for img, img_name in zip(imgs, img_names):
         for i, bb in enumerate(bbox_list):
             patch = img[bb[0]:bb[1],bb[2]:bb[3]]
@@ -520,6 +595,8 @@ def save_patches_binary(imgs, img_names, bbox_list, img_saver, img_dir, k=20, au
                     img_saver(patch,fpath)
 
 def make_augmentations(patch, fpath):
+    """Augmentations for Wang and Yang 2018.
+    """
     hor_flip = np.flip(patch,1)  
     ver_flip = np.flip(patch,0)
     rot_90 = np.rot90(patch, 1)
@@ -532,7 +609,8 @@ def make_augmentations(patch, fpath):
 
 
 def maskOverlap(bb, mask):
-    
+    """True is patch of `mask` corresponding to bounding box `bb` has positive objects
+    """
     if mask[bb[0]:bb[1],bb[2]:bb[3]].sum()==0:
         return False
     return True

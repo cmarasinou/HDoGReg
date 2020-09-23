@@ -1,23 +1,12 @@
 from ruamel.yaml import YAML
 import os
 import numpy as np
-from skimage.draw import line
-from hdogreg.dataset import *
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-import argparse
 import pandas as pd
+from hdogreg.dataset import *
+from hdogreg.utils import arg_parsing
 
-
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
 
 def generate_patches_dataset(data_dir, patches_dir,
                             kernel_size, stride, 

@@ -11,123 +11,24 @@ import torch
 import segmentation_models_pytorch as smp
 import albumentations as albu
 import yaml
-import argparse
-from hdogreg.utils import seed_everything
 from skimage.morphology import remove_small_objects
 
-
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
-
-class ExpProximityFunction():
-    """ Creates exponential proximity function.
-    """
-    
-    def __init__(self, radius=10, alpha=1):
-        self.radius = radius
-        self.alpha = alpha
-
-    def __call__(self, imgs):
-        """
-        Args:
-            imgs (list of np.arrays): second in the list should be the binary mask
-        Returns:
-            tranformed images (only second image changes)
-        """
-        if self.radius == 0:
-            return imgs
-
-        exp_map_func = make_exponential_mask_from_binary_mask
-        imgs[1] = exp_map_func(imgs[1][:,:,0], 
-            radius=self.radius, alpha=self.alpha)
-        imgs[1] = np.expand_dims(imgs[1],2)
-
-        return imgs
-
-
-    
-def make_exponential_mask(img, locations, radius, alpha, INbreast=False):
-    """Creating exponential proximity function mask.
-    Args:
-        img (np.array, 2-dim): the image, only it's size is important
-        locations (np.array, 2-dim): array should be (n_locs x 2) in size and 
-            each row should correspond to a location [x,y]. Don't need to be integer,
-            truncation is applied.
-            NOTICE [x,y] where x is row number (distance from top) and y column number
-            (distance from left)
-        radius (int): radius of the exponential pattern
-        alpha (float): decay rate
-        INbreast (bool, optional): Not needed anymore, handled when parsing INbreast dataset
-    Returns:
-        mask (np.array, 0.0-1.0): Exponential proximity function
-    """
-    # create kernel which we will be adding at locations
-    # Kernel has radial exponential decay form
-    kernel = np.zeros((2*radius+1,2*radius+1))
-    for i in range(0, kernel.shape[0]):
-        for j in range(0, kernel.shape[1]):
-            d = np.sqrt((i-radius)**2+(j-radius)**2)
-            if d<= radius:
-                kernel[i,j]=(np.exp(alpha*(1-d/radius))-1)/(np.exp(alpha)-1)
-                
-    # pad original img to avoid out of bounds errors
-    img  = np.pad(img, radius+1, 'constant').astype(float)
-
-    # update locations
-    locations = np.array(locations)+radius+1
-    locations = np.round(locations).astype(int)
-
-    # initialize mask
-    mask = np.zeros_like(img)    
-
-    for location in locations:
-        if INbreast:
-            y, x = location
-        else:
-            x, y = location
-        # add kernel
-        mask[x-radius:x+radius+1, y-radius:y+radius+1] =np.maximum(mask[x-radius:x+radius+1, y-radius:y+radius+1],kernel)
-        
-    # unpad
-    mask  = mask[radius+1:-radius-1,radius+1:-radius-1]
-    
-    return mask
-
-def make_exponential_mask_from_binary_mask(mask, radius, alpha):
-    """Creating exponential proximity function mask given the binary mask.
-    Args:
-        mask (np.array, 2-dim): binary mask
-        radius (int): radius of the exponential pattern
-        alpha (float): decay rate
-    Returns:
-        mask (np.array, 0.0-1.0): Exponential proximity function
-    """
-    locations = np.array(np.where(mask)).T
-    mask = make_exponential_mask(mask, locations, radius, alpha, INbreast=False)
-    
-    return mask
+from hdogreg.utils import seed_everything, arg_parsing
+from hdogreg.transforms import ExpProximityFunction
 
 
 class Dataset(BaseDataset):
-    """Dataset. Read images, apply augmentation and preprocessing transformations.
+    """Dataset. Reads images, apply augmentation and preprocessing transformations.
     
     Args:
-        images_dir (str): path to images folder
-        masks_dir (str): path to segmentation masks folder
-        class_values (list): values of classes to extract from segmentation mask
+        data_dir (str): dataset directory
+        csv_file (str): csv file within dataset listing full images and mask images
+        classes (list): classes list
         augmentation (albumentations.Compose): data transfromation pipeline 
             (e.g. flip, scale, etc.)
         preprocessing (albumentations.Compose): data preprocessing 
             (e.g. noralization, shape manipulation, etc.)
-        
-    
+        np_transform: transformation on images as numpy arrays
     """
     
     CLASSES = ['non-mc','mc']
@@ -198,6 +99,11 @@ class Dataset(BaseDataset):
 
 
 def get_training_augmentation():
+    """Creates training augmentation. Final size is 320x320 pixels
+    
+    Returns:
+        augmentations (albumentations.Compose)
+    """
     train_transform = [
 
         albu.HorizontalFlip(p=0.5),
@@ -220,7 +126,7 @@ def get_training_augmentation():
 
 
 def get_validation_augmentation():
-    """Add paddings to make image shape divisible by 32"""
+    """Adds paddings to make image shape divisible by 32"""
     test_transform = [
         albu.PadIfNeeded(384, 480)
     ]
@@ -228,6 +134,9 @@ def get_validation_augmentation():
 
 
 def to_tensor(x, **kwargs):
+    """Transforms torch.tensors to put channels first followed by 
+    spatial dimensionts.
+    """
     return x.transpose(2, 0, 1).astype('float32')
 
 
@@ -235,10 +144,10 @@ def get_preprocessing(preprocessing_fn):
     """Construct preprocessing transform
     
     Args:
-        preprocessing_fn (callbale): data normalization function 
+        preprocessing_fn (callback): data normalization function 
             (can be specific for each pretrained neural network)
     Return:
-        transform: albumentations.Compose
+        transform (albumentations.Compose)
     
     """
     
@@ -249,20 +158,11 @@ def get_preprocessing(preprocessing_fn):
     return albu.Compose(_transform)
 
 
-class MSELoss(smp.utils.base.Loss):
-
-    def __init__(self, activation=None, **kwargs):
-        super().__init__(**kwargs)
-        self.activation = smp.utils.base.Activation(activation)
-
-    def forward(self, y_pr, y_gt):
-        y_pr = self.activation(y_pr)
-        return torch.nn.MSELoss()(y_pr,y_gt)
-
 def run():
     seed_everything()
 
-    config_fname = os.path.abspath(os.path.dirname(os.path.realpath(__file__))+'/train_config.yaml')
+    config_fname = os.path.abspath(os.path.dirname(os.path.realpath(__file__))\
+        +'/train_config.yaml')
     # Load settings from configuration file
     with open(config_fname) as config_f:
         config_dict = yaml.load(config_f, Loader=yaml.FullLoader)['default']
@@ -292,10 +192,13 @@ def run():
     ENCODER = 'inceptionv4'
     ENCODER_WEIGHTS = 'imagenet'
     CLASSES = ['mc']
-    ACTIVATION = 'sigmoid' # could be None for logits or 'softmax2d' for multicalss segmentation
+    ACTIVATION = 'sigmoid' # could be None for logits or 'softmax2d' for multiclass segmentation
     DEVICE = 'cuda'
 
     # Create segmentation model with pretrained encoder
+    # If `FPNinceptionBase1channel.pth` non-existent,
+    # model with pretrained weights is downloaded
+    # if in resume training mode, model is looked up
     model_starter_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))\
                 +'/models/FPNinceptionBase1channel.pth'
     if resume_training:
@@ -338,9 +241,10 @@ def run():
         np_transform=ExpProximityFunction(radius=radius,alpha=alpha),
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, 
+        shuffle=True, num_workers=num_workers)
+    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, 
+        shuffle=False, num_workers=num_workers)
 
     loss = smp.utils.losses.DiceLoss()
 
@@ -372,12 +276,12 @@ def run():
 
     max_score = 0
 
+    # training loop
     for i in range(0, n_epochs):
         print('\nEpoch: {}'.format(i))
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
         
-        # do something (save model, change lr, etc.)
         if max_score < valid_logs['iou_score']:
             max_score = valid_logs['iou_score']
             model_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))\

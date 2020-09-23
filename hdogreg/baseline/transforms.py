@@ -3,6 +3,8 @@ from skimage.draw import circle
 from skimage.filters.edges import convolve
 
 def img_preprocessing(img, kernel_size=7):
+    """Preprocessing in Wang and Yang 2018.
+    """
     k_sz = kernel_size
     k_radius = k_sz/2
     kernel = np.zeros((k_sz, k_sz), dtype=np.uint8)

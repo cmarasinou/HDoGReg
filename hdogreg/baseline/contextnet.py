@@ -1,3 +1,6 @@
+# Implementation of neural network in
+# Wang and Yang 2018
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

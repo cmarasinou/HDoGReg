@@ -1,24 +1,16 @@
+# For segmenting MCs using method in
+# Ciecholewski, Marcin. 2017. 
+# “Microcalcification Segmentation from Mammograms: A Morphological Approach.” 
+# Our implementation
+
 import ray
 import os
 from tqdm import tqdm
-from math import log
-import numpy as np
-import argparse
 from ruamel.yaml import YAML
 
 from hdogreg.dataset import ImageDataset, png16_saver
 from hdogreg.image import detect_calcifications_whole_image
-
-
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
+from hdogreg.utils import arg_parsing
 
 
 def run():

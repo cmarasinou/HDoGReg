@@ -1,11 +1,9 @@
-##############################
 # Script that takes model and dataset, infers on dataset, saves model outputs as images 
 #
 # Requirements:
 # model_name, data_dir, val_csv, kernel_size, n_initial_filters
 #
 #
-##############################
 
 import os
 from tqdm import tqdm
@@ -20,6 +18,8 @@ from torch.utils.data import Dataset as BaseDataset
 import cv2
 import segmentation_models_pytorch as smp
 import skimage
+from hdogreg.utils import arg_parsing
+
 
 
 def get_preprocessing(preprocessing_fn):
@@ -76,6 +76,14 @@ def get_bounding_boxes(img, kernel_size, stride):
     return bbList
 
 class Dataset(BaseDataset):
+    """Dataset. Reads full images, apply preprocessing transformations.
+    
+    Args:
+        data_dir (str): dataset directory
+        csv_file (str): csv file within dataset listing full images and mask images
+        classes (list): classes list
+        preprocessing (albumentations.Compose): data preprocessing 
+    """
     
     def __init__(
             self, 
@@ -158,16 +166,6 @@ def predict_from_large_image(model, img, kernel_size=512, overlap = 0, batch_siz
                     out[bb[0]+o:bb[1]-o,bb[2]+o:bb[3]-o]=patch_out[o:-o,o:-o] 
     return out.cpu()
 
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
-
 
 # Load configuration contents
 config_fname = os.path.abspath(os.path.dirname(os.path.realpath(__file__))+'/validation_config.yaml')
@@ -231,11 +229,5 @@ for idx in tqdm(range(0,ds.__len__())):
         pred = (pred*(2**16-1)).astype(np.uint32)
         pil_img = Image.fromarray(pred)
         pil_img.save(fpath)
-        
-
-ds.df[model_name+"_image"] = ds.df.full_image+'_'+model_name
-csv_file = os.path.join(other_dir, val_csv)
-print("\n------Saving CSV------\n")
-ds.df.to_csv(csv_file, index=True)
 
 

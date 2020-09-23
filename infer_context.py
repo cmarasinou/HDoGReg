@@ -1,27 +1,25 @@
+# For detecting MCs using method in
+# Wang, Juan, and Yongyi Yang. 2018. 
+# “A Context-Sensitive Deep Learning Approach for Microcalcification Detection in Mammograms.” 
+
 import os 
 from tqdm import tqdm
 from ruamel.yaml import YAML
-import argparse
 from skimage.feature import blob_dog
 from skimage.draw import circle
-from hdogreg.dataset import ImageDataset, bboxInImage, png16_saver, npy_saver
-from hdogreg.baseline.contextnet import contextNet
-from hdogreg.baseline.transforms import ContextPaperPreprocess
 import torch
 import numpy as np
 
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
+from hdogreg.dataset import ImageDataset, bboxInImage, png16_saver
+from hdogreg.baseline.contextnet import contextNet
+from hdogreg.baseline.transforms import ContextPaperPreprocess
+from hdogreg.utils import arg_parsing
+
 
 
 def apply_dog(img, min_sigma, max_sigma, DoG_thr, overlap):
+    """Applying difference-of-Gaussians blob detections on image
+    """
     if isinstance(img, torch.Tensor):
         img = img.squeeze().numpy()
     blobs = blob_dog(img, min_sigma=min_sigma,
@@ -29,6 +27,8 @@ def apply_dog(img, min_sigma, max_sigma, DoG_thr, overlap):
     return blobs
 
 def blobs_to_bbox(blobs,bbox_size=95):
+    """Blobs bounding boxes are found
+    """
     bbox_list =[]
     for blob in blobs:
         size = bbox_size
@@ -39,6 +39,7 @@ def blobs_to_bbox(blobs,bbox_size=95):
     return bbox_list
 
 def extract_patches(img,bboxes):
+    """Multiple patches are extracted from image"""
     patches=[]
     for bb in bboxes:
         patch = extract_patch(img,bb)
@@ -47,6 +48,8 @@ def extract_patches(img,bboxes):
     return torch.stack(patches, dim=0)
 
 def extract_patch(img,bb):
+    """Given image `img` and bounding box `bb` a patch is extracted
+    """
     if isinstance(img, torch.Tensor):
         img = img.squeeze().numpy()
     h_bb, w_bb = bb[1]-bb[0], bb[3]-bb[2]
@@ -65,6 +68,9 @@ def extract_patch(img,bb):
     return patch
 
 def predict_batch(model, inputs, device='cuda'):
+    """Infers on batch using model, softmax is applied on logits.
+    Probabilities for class 1 are returned.
+    """
     model.to(device)
     inputs=inputs.to(device)
     model.eval()

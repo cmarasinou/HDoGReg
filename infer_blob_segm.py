@@ -1,33 +1,13 @@
+# For segmenting blobs in mammograms
+
 import ray
 import os
 from tqdm import tqdm
-from math import log
-import numpy as np
-import argparse
 from ruamel.yaml import YAML
 
-from skimage.measure import regionprops
-from skimage.feature import blob_dog, peak_local_max
-from skimage.util import img_as_float
-from skimage.feature.blob import _prune_blobs
-from scipy import ndimage
-from skimage.draw import circle
-
-from hdogreg.dataset import ImageDataset, bboxInImage, png16_saver
+from hdogreg.dataset import ImageDataset, png16_saver
 from hdogreg.image import blob_detector_hdog
-
-
-
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
-
+from hdogreg.utils import arg_parsing
 
 def run():
     # Load configuration contents

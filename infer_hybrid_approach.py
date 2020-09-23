@@ -1,3 +1,6 @@
+# For combining FPN and blob segmentation results to give final segmentation
+# A fixed operating threshold is applied on the FPN output
+
 import ray
 import os
 from tqdm import tqdm
@@ -8,18 +11,7 @@ from ruamel.yaml import YAML
 
 from hdogreg.dataset import ImageDataset, png16_saver
 from hdogreg.image import hybrid_approach
-
-
-
-def arg_parsing(config_dict):
-    arg_parser = argparse.ArgumentParser()
-    for key in config_dict.keys():
-        arg_parser.add_argument('-{}'.format(key))
-    args = vars(arg_parser.parse_args())
-    for key in config_dict.keys():
-        if args[key] is not None:
-            config_dict[key] = args[key]
-    return config_dict
+from hdogreg.utils import arg_parsing
 
 
 def run():

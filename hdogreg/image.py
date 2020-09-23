@@ -1,20 +1,15 @@
 from math import log
 import numpy as np
 from skimage import filters
-from skimage.morphology import remove_small_objects, remove_small_holes, skeletonize, reconstruction, extrema, convex_hull_image
-from skimage.morphology import opening, closing, square, dilation,disk, binary_erosion,binary_dilation, binary_opening, erosion
+from skimage.morphology import remove_small_objects, remove_small_holes, reconstruction, extrema
+from skimage.morphology import opening, closing, square, dilation,disk, binary_erosion,binary_dilation, erosion
 from skimage.transform import pyramid_reduce, pyramid_expand
 from skimage.measure import regionprops
-from skimage.feature import greycomatrix,greycoprops
 from skimage.segmentation import watershed, find_boundaries
 from skimage.util import img_as_float
 from skimage.feature.blob import _prune_blobs
 from skimage.feature import peak_local_max
-from skimage import exposure
 from scipy import ndimage
-from scipy import optimize
-from sklearn.cluster import DBSCAN
-import collections
 import cv2
 
 def delineate_breast(image, otsu_percent=0.2, bdry_remove=0.0, erosion=0, return_slice = False):
@@ -75,7 +70,19 @@ def delineate_breast(image, otsu_percent=0.2, bdry_remove=0.0, erosion=0, return
 
 def blob_detector_hdog(image, min_sigma=1, max_sigma=50, sigma_ratio=1.6, threshold=2.0,
              overlap=.5, hessian_thr=None):
-    """Segments blobs using DoG and Hessian Analysis
+    """Segments blobs of arbitrary shape using DoG and Hessian Analysis.
+    Args:
+        image (np.array, 2-dim)
+        min_sigma (float, optional): DoG parameter
+        max_sigma (float, optional): DoG parameter
+        sigma_ratio (float, optional): DoG parameter
+        threshold (float, optional): DoG parameter
+        overlap (float, optional): DoG parameter, 0.0-1.0
+        hessian_thr (float, optional): Hessian Analysis parameter.
+            Must be positive. Larger values give more tubular blobs
+    Returns:
+        segmented mask (np.array, 2-dim): the blob segmentation mask as a boolean array;
+            same size as `image` 
     """
  
     image = img_as_float(image)
@@ -140,6 +147,14 @@ def blob_detector_hdog(image, min_sigma=1, max_sigma=50, sigma_ratio=1.6, thresh
 
 
 def hessian_criterion(img_f, thr):
+    """Computes Hessian of array and applies constraint on it's Hessian
+    Args: 
+        img_f (np.array, 2-dim): float
+        thr (float): positive; parameter h_{thr} as in paper
+    Returns:
+        segmented mask (np.array, 2-dim): the blob segmentation mask as a boolean array;
+        same size as `image` 
+    """
     img_hes = hessian(img_f)
     img_hes_det = img_hes[0,0,:,:]*img_hes[1,1,:,:]-img_hes[1,0,:,:]*img_hes[0,1,:,:]
     img_hes_trace = img_hes[0,0,:,:]+img_hes[1,1,:,:]
@@ -152,6 +167,7 @@ def hessian_criterion(img_f, thr):
 
 
 def hessian_negative_definite(img_f):
+    """Determines at what locations Hessian of `img_f` is negative definite"""
     img_hes = hessian(img_f)
     img_hes_det = img_hes[0,0,:,:]*img_hes[1,1,:,:]-img_hes[1,0,:,:]*img_hes[0,1,:,:]
     img_hes_trace = img_hes[0,0,:,:]+img_hes[1,1,:,:]
@@ -161,8 +177,8 @@ def hessian_negative_definite(img_f):
 def hessian(x):
     """
     Calculate the hessian matrix with finite differences
-    Parameters:
-       - x : ndarray
+    Args:
+       x (np.array, 2-dim)
     Returns:
        an array of shape (x.dim, x.ndim) + x.shape
        where the array[i, j, ...] corresponds to the second derivative x_ij
@@ -263,10 +279,13 @@ def get_bounding_boxes(img, kernel_size, stride):
 
 
 def detect_calcifications_Ciecholewski(img, thr=10., h=5,):
-    """Morphological calcification detector, using pyramid scheme
+    """Morphological calcification detector, using method in 
+    Ciecholewski, Marcin. 2017.
+    `Microcalcification Segmentation from Mammograms: A Morphological Approach.`
     Args:
         img (np.array, 2-dim): breast image
         thr (float, 0.0-256.0, optional): for thresholding the filters
+        h (float, optional): defined in paper 
     Returns:
         mask: binary np.array
     """
@@ -342,7 +361,6 @@ def detect_calcifications_Ciecholewski(img, thr=10., h=5,):
 
 def detect_calcifications_whole_image(img, thr=10., erosion=10, method='pyramid'):
     """Morphological segmentation of calcifications
-    TO GET DEPRECIATED
     """
     patches, padding = create_patches(img, (500,500))
     mask_patches = np.zeros_like(patches,dtype=int) 

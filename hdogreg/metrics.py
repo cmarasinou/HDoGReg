@@ -8,13 +8,26 @@ from scipy import ndimage
 def get_confusion_matrix_2(pred_mask, gt_mask, 
                            distance_thr = 5, IoU_thr=0.3, small_object_area = 1, 
                            return_mask = False, return_dot_results=False):
-    '''
+    """Given the predicted segmentation mask and ground truth mask, applies a localization
+    scheme to determine the number of TP,FP,FN detections/objects
     Strategy:
     1. Iterate over GT objects and determine which are the TP. Every time a detection
-    occurs eliminate the object responsible from the Prediction
+    occurs eliminate the object responsible from the prediction
     2. All GT objects not detected are FN
     2. Remaining objects in prediction are FP
-    '''
+
+    Args:
+        pred_mask (np.array, 2-dim): predicted segmentation mask
+        gt_mask (np.array, 2-dim): ground truth (or reference) segmentation mask
+        distance_thr (float, optional): minimum distance between objects for a 
+            match (in pixels)
+        IoU_thr (float, optional): 0.0-1.0; minimum IoU for a match
+        small_object_area (float, optional)
+        return_mask (bool, optional): If True, will return 3 masks of TP,FP,FN detected objects
+        return_dot_results (bool, optional): If True, TP_dot, FP_dot are returned too
+    Returns:
+        TP, FP, FN 
+    """
     # Cast to boolean
     gt_mask = gt_mask.astype(bool)
     pred_mask = pred_mask.astype(bool)
@@ -163,6 +176,8 @@ def large_object_criterion_2(prop_gt, props_pred, label_gt, label_pred, IoU_thr,
 
 
 def bboxOverlap(bb1, bb2):
+    """Determines if two bounding boxes overlap
+    """
     
     x1,x2,y1,y2 = bb1
     x1b,x2b,y1b,y2b = bb2
@@ -176,6 +191,8 @@ def bboxOverlap(bb1, bb2):
 
 
 def combineBboxes(bb1,bb2):
+    """Combining two bounding boxes in one that includes both
+    """
     x1,x2,y1,y2 = bb1
     x1b,x2b,y1b,y2b = bb2
     
@@ -196,7 +213,7 @@ def IoU(y_pred, y_true):
 
 
 def mIoU(y_pred, y_true):
-    '''Returns IoU between two binary images in np format
+    '''Returns mean IoU between two binary images in np format
     '''
     iou1 = IoU(y_pred, y_true)
     iou2 = IoU(~y_pred, ~y_true)
@@ -205,9 +222,15 @@ def mIoU(y_pred, y_true):
 
 
 def get_iou_per_object(pred_mask, gt_mask):
-    '''
+    '''Computes IoU per object in ground truth mask, with respect to the object 
+    with which it has the most overlap with in the predicted mask
     Strategy:
     1. Iterate over GT objects and find max IoU with a predicted object for each
+    Args:
+        pred_mask (np.array, 2-dim): predicted segmentation mask
+        gt_mask (np.array, 2-dim): ground truth (or reference) segmentation mask
+    Returns:
+        dict with areas and IoUs of objects in the ground truth mask
     '''
     # Cast to boolean
     gt_mask = gt_mask.astype(bool)
@@ -237,7 +260,13 @@ def get_iou_per_object(pred_mask, gt_mask):
 
 def max_iou(prop_gt, props_pred, label_gt, label_pred):
     """
-    Based on IoU
+    Args:
+        prop_gt (skimage.regionprops prop): Representing a ground truth object
+        props_pred (skimage.regionprops): Representing all predicted objects
+        label_gt (np.array, int): representing ground truth objects with different
+            integers
+        label_pred (np.array, int): representing predicted objects with different
+            integers
     """
     # initialize
     max_IoU = 0.0
