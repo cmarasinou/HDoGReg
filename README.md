@@ -14,3 +14,28 @@ Accurate microcalcification (MC) segmentation in 2D full-field digital mammograp
 ![HDoGReg: Approach for segmenting individual microcalcifications.](https://github.com/cmarasinou/HDoGReg/blob/master/documentation/figures/SegmentationPipeline.png)
 
 HDoGReg: Approach for segmenting individual MCs. Although the segmentation is performed on whole mammograms, for visualization purposes only a patch is being shown. In the upper branch, blob segmentation is per- formed to segment bright blob-like and tubular structures. In the lower branch, a regression convolutional neural network gives a continuous function with higher response close to MCs. A threshold is then applied to segment individ- ual MCs. The output from the two branches is combined based on an overlap criterion, resulting to the final segmentation mask.
+
+## Results
+
+Here are some segmentation examples applying HDoGReg and the comparison method. For visualization purposes we present 256x256 sized patches with the single-pixel
+reference annotation objects dilated. From left to right: (a) Images; (b) Reference Annotation; (c) HDoGReg Predicted Segmentation; (d) Ciecholewski (2017)
+Segmentation. The three top patches are from INbreast data and the rest are our data.
+
+![Segmentation Examples](https://github.com/cmarasinou/HDoGReg/blob/master/documentation/figures/ResultExamples.png)
+
+
+## Requirements & Containers
+
+TODO
+
+## Preparing your data
+
+TODO: Describe the directory structure of the dataset & provide sample from INbreast or all
+
+## Running the code
+
+TODO: How to run pipelines
+
+## Tutorials
+
+TODO: Point to notebook tutorials
