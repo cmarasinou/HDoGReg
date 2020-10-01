@@ -1,12 +1,12 @@
-# Instruction for Docker
+# Instructions for Docker 
 
-# Create image
+## Create Image
 
 ```bash
 docker build -t docker_image_name -f ./Dockerfile.nvidia440 ./
 ```
 
-# Create container and run
+## Create and Run Container
 
 ```bash
 nvidia-docker  run -it --ipc=host -v ~:/workspace/ docker_image_name

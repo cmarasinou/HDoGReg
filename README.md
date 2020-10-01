@@ -30,12 +30,37 @@ TODO
 
 ## Preparing your data
 
-TODO: Describe the directory structure of the dataset & provide sample from INbreast or all
+The dataset should have the following directory structure. A specific format for the image file names does not apply. 
+
+```
+dataset_directory/
+├── images
+│   └── png16
+│       ├── image1.png
+│       └── mask1.png
+│           ...
+└── other
+    ├── test.csv
+    ├── train.csv
+    └── val.csv
+```
+
+The CSV files point to the files and should have the following structure:
+
+```
+train.csv
+
+ , full_image, mask_image
+0, image1.png, mask1.png 
+        ...
+```
+
+A sample dataset can be found in TODO
 
 ## Running the code
 
-TODO: How to run pipelines
+TODO: How to run pipelines; training pipeline; infering pipeline; evaluating pipeline
 
 ## Tutorials
 
-TODO: Point to notebook tutorials
+- [Tutorial: Individual components of HDoGReg are applied to produce MC segmentation](https://github.com/cmarasinou/HDoGReg/blob/master/notebooks/microcalcification-segmentation-tutorial.ipynb)
