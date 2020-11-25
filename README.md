@@ -59,7 +59,7 @@ A sample dataset can be found in
 
 ## Running the code
 
-1. Follow the [Docker Instructions](https://github.com/cmarasinou/HDoGReg/blob/master/docker/README.md) to create a container.
+1. Follow the [Docker Instructions](https://github.com/cmarasinou/HDoGReg/blob/master/docker/README.md) to create and run a container.
 2. Download Sample Data and Trained Models
 ```bash
 python download_sample_data.py -target_dir './data/'
@@ -70,7 +70,9 @@ python models/download_trained_models.py
 ./pipeline_infer.sh
 ```
 4. Run training
-TODO
+```bash
+./pipeline_train.sh
+```
 5. Run evaluation
 TODO
 

@@ -35,42 +35,36 @@ def generate_patches_dataset(data_dir, patches_dir,
         continue
 
     # Separating the files in masks and regular images
-    masks = list()
-    full_images = list()
+    all_patch_files = list()
     for cdir, _, files in os.walk(ds_patch.img_dir):
         # remove extensions
         files = [f[:-4] for f in files]
         files.sort()
         files = [os.path.relpath(os.path.join(cdir,f),ds_patch.img_dir) for f in files]
         # keep only masks
-
-
         for f in files:
-            if f.find('_mask')>=0:
-                masks.append(f)
-                f = f.replace('_mask_filled','')
-                f = f.replace('_mask','')
-                full_images.append(f)
-            if f.find('FullMammoMasks')>=0:
-                masks.append(f)
-                f = f.replace('FullMammoMasks', 'FullMammoPng')
-                full_images.append(f)
-                
-    df = pd.DataFrame({"full_image":full_images, mask_col_name:masks})
+            all_patch_files.append(f)
+    all_patch_files = pd.Series(all_patch_files)
+
     ds = ImageDataset(data_dir, in_csv, img_format='png16', images_list=['full_image']
                  )
+
+    collect_patch_data = list()
     # for each image in initial dataset find corresponding extracted patches 
-    indices = []
     for idx in range(0,ds.__len__()):
-        img_patches = df.full_image.str.contains(ds.df.full_image.iloc[idx])
-        indices+=list(np.where(img_patches)[0])
-    df_patch = df.iloc[indices]
-
+        record = ds.df.iloc[idx]
+        # Adding "_" such that we make sure cases like: "image1", "image10" are not
+        # picked together
+        images = all_patch_files[all_patch_files.str.contains(record.full_image+'_')]
+        # Sorting needed to make image patches match with mask patches
+        images.sort_values(inplace=True)
+        masks = all_patch_files[all_patch_files.str.contains(record[mask_col_name]+'_')]
+        masks.sort_values(inplace=True,)
+        df = pd.DataFrame({"full_image":list(images),
+                    "mask_image":list(masks)})
+        collect_patch_data.append(df)
+    df_patch = pd.concat(collect_patch_data, ignore_index=True)
     csv_dir = os.path.join(patches_dir,'other/')
-    df_patch.rename(index=str, 
-        columns={"full_image": "full_image", mask_col_name:"mask_image"}, 
-        inplace=True)
-
     df_patch.to_csv(os.path.join(csv_dir,out_csv), index=True)
 
 
@@ -89,18 +83,17 @@ def run():
     kernel_size = int(config_dict['kernel_size'])
     stride = int(config_dict['stride'])
     mask_col_name = config_dict['mask_col']
-    target_csv = config_dict['target_csv']
     train_csv = config_dict['train_csv']
     val_csv = config_dict['val_csv']
     num_workers = config_dict['num_workers']
 
+    patches_dir = os.path.abspath(patches_dir)
     # process training images
     generate_patches_dataset(data_dir, patches_dir,  
         kernel_size, stride, mask_col_name, train_csv, 'train.csv', num_workers)
     # process validation images
     generate_patches_dataset(data_dir, patches_dir,  
         kernel_size, stride, mask_col_name, val_csv, 'val.csv', num_workers)
-
 
 
 if __name__ == '__main__':
