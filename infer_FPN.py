@@ -228,6 +228,8 @@ for idx in tqdm(range(0,ds.__len__())):
         pred = pred.cpu().squeeze().numpy()
         pred = (pred*(2**16-1)).astype(np.uint32)
         pil_img = Image.fromarray(pred)
+        img_dir = os.path.dirname(fpath)
+        os.makedirs(img_dir, exist_ok=True)
         pil_img.save(fpath)
 
 
