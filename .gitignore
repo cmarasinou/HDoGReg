@@ -2,6 +2,7 @@
 runs/
 mlruns/
 output/
+data/
 
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/

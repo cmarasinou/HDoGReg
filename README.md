@@ -55,11 +55,24 @@ train.csv
         ...
 ```
 
-A sample dataset can be found in TODO
+A sample dataset can be found in 
 
 ## Running the code
 
-TODO: How to run pipelines; training pipeline; infering pipeline; evaluating pipeline
+1. Follow the [Docker Instructions](https://github.com/cmarasinou/HDoGReg/blob/master/docker/README.md) to create a container.
+2. Download Sample Data and Trained Models
+```bash
+python download_sample_data.py -target_dir './data/'
+python models/download_trained_models.py
+```
+3. Run inference
+```bash
+./pipeline_infer.sh
+```
+4. Run training
+TODO
+5. Run evaluation
+TODO
 
 ## Tutorials
 
