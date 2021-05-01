@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # download data in target_dir
     filepath = os.path.join(target_dir, data_filename)
     try:
-        download_url_to_file(data_url, filepath, progress=False)
+        download_url_to_file(data_url, filepath, progress=True)
     except:
         print('Cannot download {}'.format(data_url))
         filepath = local_filepath
