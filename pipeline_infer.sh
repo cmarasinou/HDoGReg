@@ -13,7 +13,7 @@ csv="test.csv"
 # Other
 num_workers=20
 gpu_number=0
-model_name="FPNr10a1nh_new"
+model_name="trainedFPN"
 
 #Running
 python infer_breast_segm.py -data_dir $data_dir -val_csv $csv\

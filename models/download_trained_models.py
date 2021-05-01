@@ -2,12 +2,12 @@ from torch.hub import download_url_to_file
 import os
 
 model_urls = [
-    'https://github.com/cmarasinou/HDoGReg/releases/download/v0.1alpha/context2.tar',
-    'https://github.com/cmarasinou/HDoGReg/releases/download/v0.1alpha/FPNinceptionBase1channel.pth',
+    'https://github.com/cmarasinou/HDoGReg/releases/download/v0.1/wang_yang.tar',
+    'https://github.com/cmarasinou/HDoGReg/releases/download/v0.1/trainedFPN.pth',
     ]
 model_filenames = [
-    'context2.tar',
-    'FPNinceptionBase1channel.pth',
+    'wang_yang.tar',
+    'trainedFPN.pth',
     ]
 
 model_dir = os.path.dirname(os.path.realpath(__file__))
