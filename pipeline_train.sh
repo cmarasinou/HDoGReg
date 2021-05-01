@@ -2,7 +2,7 @@
 radius=10
 alpha=1
 # Files and Directories 
-data_dir='./data/'
+data_dir='./data/INbreast-sample/'
 patch_dir='./data/patches/'
 # Training Parameters
 num_workers=20
