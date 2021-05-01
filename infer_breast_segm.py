@@ -35,7 +35,7 @@ def run():
                      attributes_list=['full_image']
                     )
     print("\n------Initializing Ray------\n")
-    ray.init(num_cpus=num_workers, webui_host='127.0.0.1')
+    ray.init(num_cpus=num_workers)#, webui_host='127.0.0.1')
     # put dataset on remote
     ds_id = ray.put(ds)
     ##########################################################

@@ -203,9 +203,10 @@ def hybrid_approach(pred_mask,breast_mask,blob_mask,hybrid_combining='multiplica
 
     # for removing structures at the boundary
     #breast_mask = binary_erosion(breast_mask,square(45))
-    breast_mask = cv2.erode(breast_mask.astype(np.float),cv2.getStructuringElement(cv2.MORPH_RECT,(45,45)))
-    pred_mask = pred_mask*breast_mask
-    blob_mask = blob_mask*breast_mask
+    if breast_mask is not None:
+        breast_mask = cv2.erode(breast_mask.astype(np.float),cv2.getStructuringElement(cv2.MORPH_RECT,(45,45)))
+        pred_mask = pred_mask*breast_mask
+        blob_mask = blob_mask*breast_mask
     if extra_mask is not None:
         pred_mask = pred_mask*extra_mask
         blob_mask = blob_mask*extra_mask        

@@ -255,7 +255,7 @@ def run():
     regression = int(config_dict['regression'])
     if not regression:
         thr_list = np.concatenate((np.logspace(-6,-1,5),np.linspace(0,0.9,10), 1-np.logspace(-6,-1,5)))
-        thr_list = [0.5]
+        # thr_list = [0.5]
     else:
         thr_list = np.linspace(0,radius,20)
         thr_list = [(np.exp(alpha*(1-d/radius))-1)/(np.exp(alpha)-1) for d in thr_list]
@@ -291,7 +291,7 @@ def run():
                          attributes_list=['full_image']
                         )
         print("\n------Initializing Ray------\n")
-        ray.init(num_cpus=num_workers, webui_host='127.0.0.1')
+        ray.init(num_cpus=num_workers)#, webui_host='127.0.0.1')
         # put dataset on remote
         ds_id = ray.put(ds)
         ##########################################################

@@ -52,6 +52,7 @@ confusion_matrix:
   gamma: 3
   hybrid_combining: 'multiplication'
   hybrid_combining_overlap: 0.1
+  use_breast_mask: 1
   # For using classification models
   regression: True
   pred_dir: ""

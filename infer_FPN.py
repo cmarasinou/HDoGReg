@@ -208,7 +208,7 @@ ds = Dataset(data_dir, val_csv)
 # Load model
 model_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__))+'/models/'+model_name+'.pth')
 print(model_path)
-model = torch.load(model_path).to(DEVICE)
+model = torch.load(model_path, map_location=torch.device('cpu') ).to(DEVICE)
 
 
 ##########################################################

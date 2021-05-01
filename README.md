@@ -51,7 +51,7 @@ The CSV files point to the files and should have the following structure:
 train.csv
 
  , full_image, mask_image
-0, image1.png, mask1.png 
+0, image1, mask1
         ...
 ```
 

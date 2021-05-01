@@ -29,6 +29,7 @@ def run():
     model_name = config_dict['model_name']
     regression = int(config_dict['regression'])
     thr = float(config_dict['threshold'])
+    use_breast_mask = int(config_dict['use_breast_mask'])
 
     blob_dir = os.path.join(save_dir,'blob/')
     breast_dir = os.path.join(save_dir,'breast_segm/')
@@ -47,7 +48,7 @@ def run():
                      attributes_list=['full_image']
                     )
     print("\n------Initializing Ray------\n")
-    ray.init(num_cpus=num_workers, webui_host='127.0.0.1')
+    ray.init(num_cpus=num_workers)#, webui_host='127.0.0.1')
     # put dataset on remote
     ds_id = ray.put(ds)
     ##########################################################
@@ -59,7 +60,10 @@ def run():
         blob_path = os.path.join(blob_dir,img_name+'.png')
         breast_path = os.path.join(breast_dir,img_name+'.png')
         blob_mask = ds_id._img_to_numpy(blob_path)
-        breast_mask = ds_id._img_to_numpy(breast_path)
+        if use_breast_mask:
+            breast_mask = ds_id._img_to_numpy(breast_path)
+        else:
+            breast_mask = None
         pred_fpn_path = os.path.join(pred_fpn_dir,img_name+'.png')
         pred_fpn = ds_id._img_to_numpy(pred_fpn_path)
 
