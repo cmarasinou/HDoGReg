@@ -7,7 +7,7 @@ hessian_thr=1.4
 # Combining threshold
 comb_thr=0.00031622776601683794
 # Files and Directories 
-data_dir='./data/'
+data_dir='./data/INbreast-sample/'
 save_dir='./output/infer1/'
 csv="test.csv"
 # Other
