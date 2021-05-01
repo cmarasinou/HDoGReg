@@ -113,7 +113,7 @@ def run():
                      attributes_list=['full_image']
                     )
     print("\n------Initializing Ray------\n")
-    ray.init(num_cpus=num_workers, webui_host='127.0.0.1')
+    ray.init(num_cpus=num_workers)#, webui_host='127.0.0.1')
     # put dataset on remote
     ds_id = ray.put(ds)
     ##########################################################
@@ -168,14 +168,16 @@ def run():
     plt.ylabel('Threshold', fontsize=15)
     plt.xticks(fontsize=15); plt.yticks(fontsize=15)
     sns.boxplot(data=df, orient='h', color = 'yellow')
-    plt.savefig(os.path.join(save_dir,'{}IoUperobject.png'.format(out_csv_file)),dpi=200)
+    graph_path = os.path.join(save_dir,'{}IoUperobject.png'.format(out_csv_file))
+    plt.savefig(graph_path,dpi=200)
+    print(f'FILE SAVED. IoU per object box plot saved at: {graph_path}')
     plt.close()
 
     
     logging_metrics({
         'iou_max':df.mean().max()
         })
-    print(df.mean().max())
+    print(f'RESULT FOUND. Max IoU per Object = {df.mean().max()}')
 
 
 if __name__ == '__main__':

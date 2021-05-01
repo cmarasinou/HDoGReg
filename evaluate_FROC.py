@@ -152,6 +152,7 @@ def make_froc_graphs(pickle_files, data_names,colors, max_FP = 10, bootstraps=No
     plt.legend(data_names, loc=4, frameon=False)
     if save is not None:
         plt.savefig(save, dpi=200)
+        print(f'FILE SAVED. FROC curve was saved at: {save}')
     plt.show()
     return pauc
     
@@ -202,6 +203,7 @@ def make_froc_graphs_no_unit_area(pickle_files, data_names,colors, max_FP = 10, 
     plt.legend(data_names, loc=4, frameon=False)
     if save is not None:
         plt.savefig(save, dpi=200)
+        print(f'FILE SAVED. FROC curve was saved at: {save}')
     plt.show()
     return pauc[0]
     
@@ -387,6 +389,7 @@ def run():
     logging_metrics({
             'pauc':pauc,
             })
+    print(f'RESULT FOUND. partial area under curve (pAUC) = {pauc}')
 
 
 if __name__ == '__main__':

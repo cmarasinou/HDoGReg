@@ -26,7 +26,7 @@ Segmentation. The three top patches are from INbreast data and the rest are our 
 
 ## Requirements & Containers
 
-TODO
+Follow the [Docker Instructions](https://github.com/cmarasinou/HDoGReg/blob/master/docker/README.md) to create and run a suitable container.
 
 ## Preparing your data
 
@@ -65,16 +65,27 @@ A sample dataset can be found in
 python download_sample_data.py -target_dir './data/'
 python models/download_trained_models.py
 ```
-3. Run inference
-```bash
-./pipeline_infer.sh
-```
-4. Run training
+3. Run training
 ```bash
 ./pipeline_train.sh
 ```
-5. Run evaluation
-TODO
+4. Run inference (pretrained model can be used)
+```bash
+./pipeline_infer.sh
+```
+5. Run evaluation (should be run after inferance)
+```bash
+./pipeline_evaluate.sh
+```
+
+During model evaluation results are saved in MLflow under the directory `mlruns/`. To access results run
+```bash
+mlflow ui
+```
+and view at http://localhost:5000. For further instructions on how to use MLflow look at the official documentation mlflow.org/docs/latest/quickstart.html
+
+
+
 
 ## Tutorials
 
