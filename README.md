@@ -73,7 +73,11 @@ python models/download_trained_models.py
 ```bash
 ./pipeline_infer.sh
 ```
-5. Run evaluation (should be run after inferance)
+5. Run inference with other baseline methods
+```bash
+./pipeline_other_methods.sh
+```
+6. Run evaluation (should be run after inferance)
 ```bash
 ./pipeline_evaluate.sh
 ```

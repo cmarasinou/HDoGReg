@@ -36,7 +36,7 @@ def run():
                      attributes_list=['full_image']
                     )
     print("\n------Initializing Ray------\n")
-    ray.init(num_cpus=num_workers,webui_host='127.0.0.1')
+    ray.init(num_cpus=num_workers)#,webui_host='127.0.0.1')
     # put dataset on remote
     ds_id = ray.put(ds)
     ##########################################################
@@ -57,6 +57,7 @@ def run():
         data.append(main_func.remote(idx, ds_id))
     data = ray.get(data)
     ray.shutdown()
+    print(f'Segmentation results saved at {pred_dir}')
 
 
 if __name__ == '__main__':

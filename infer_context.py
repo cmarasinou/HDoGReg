@@ -107,7 +107,7 @@ def run():
     DoG_only = int(config_dict['DoG_only'])
     batch_size = int(config_dict['batch_size'])
     gpu_number = int(config_dict['gpu_number'])
-
+    pred_dir = os.path.join(save_dir, 'pred_Wang_Yang/')
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_number)
 
     ##########################################################
@@ -161,10 +161,11 @@ def run():
                 pred_image[rr,cc]=prob
 
         # Saving pred image
-        fpath = os.path.join(save_dir,'{}.png'.format( \
+        fpath = os.path.join(pred_dir,'{}.png'.format( \
             img_name))
         os.makedirs(os.path.dirname(fpath), exist_ok=True)
         png16_saver(pred_image, fpath)
+        print(f'Detection results saved at {pred_dir}')
 
 
 
