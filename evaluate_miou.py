@@ -37,7 +37,6 @@ def run():
     save_dir = config_dict['save_dir']
     mask_col = config_dict['mask_col']
     num_workers = int(config_dict['num_workers'])
-    out_csv_file = config_dict['out_csv_file']
 
     pred_dir = os.path.join(save_dir,'hybrid_approach/')
 
@@ -45,7 +44,6 @@ def run():
     logging_params([
     ("data_dir", os.path.basename(os.path.dirname(data_dir))),
     ('val_csv', csv_file), 
-    ('out_csv_file',out_csv_file)
     ])
 
 
@@ -76,12 +74,12 @@ def run():
     for idx in tqdm(range(0,n_data)):
         data.append(main_func.remote(idx, ds_id))
     data = ray.get(data)
-    out_file = os.path.join(save_dir, out_csv_file)
+    out_file = os.path.join(save_dir, "mIoU.pkl")
     pickle_dict = {
         'miou': data
     }
 
-    pickle.dump( pickle_dict, open(out_file+"mIoU.p", "wb" ) )
+    pickle.dump( pickle_dict, open(out_file, "wb" ) )
     ray.shutdown()
 
     mean_miou = np.mean(data)

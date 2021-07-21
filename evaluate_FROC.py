@@ -8,30 +8,21 @@ import os
 from tqdm import tqdm
 from math import log
 import numpy as np
-
-from ruamel.yaml import YAML
-import torch
-from skimage.morphology import remove_small_holes, binary_erosion, square, remove_small_objects
-from skimage.measure import regionprops
-from skimage.feature import blob_dog, peak_local_max
-from skimage.util import img_as_float
-from skimage.feature.blob import _prune_blobs
-from scipy import ndimage
-from hdogreg.image import  overlap_based_combining, hybrid_approach
-from hdogreg.dataset import ImageDataset, bboxInImage
-from hdogreg.metrics import get_confusion_matrix_2
-from hdogreg.utils import arg_parsing
-
 import pandas as pd
 import pickle
 
 import seaborn as sns
 import matplotlib.pyplot as plt
-import torch
-from skimage.draw import circle
 import mlflow
-import cv2
 from sklearn.metrics import auc
+
+from ruamel.yaml import YAML
+from hdogreg.image import  hybrid_approach
+from hdogreg.dataset import ImageDataset
+from hdogreg.metrics import get_confusion_matrix_2
+from hdogreg.utils import arg_parsing
+
+
 
 
 def logging_params(params_list):
@@ -246,7 +237,6 @@ def run():
     mask_col = config_dict['mask_col']
     num_workers = int(config_dict['num_workers'])
 
-    out_csv_file = config_dict['out_csv_file']
     small_area = float(config_dict['small_area'])
     distance_thr = float(config_dict['distance_thr'])
     iou_thr = float(config_dict['iou_thr'])
@@ -278,8 +268,7 @@ def run():
         ('radius', radius),
         ('alpha', alpha),
         ('hessian_thr', hessian_thr),
-        ('comment',comment),
-        ('out_csv_file',out_csv_file)
+        ('comment',comment)
         ])
 
 
@@ -334,8 +323,7 @@ def run():
             data_computed[thr] = ray.get(data[thr])
         df = pd.DataFrame(data_computed)
         data_dict = {'dataframe': df}
-        #csv_path = os.path.join(save_dir, out_csv_file)
-        #df.to_csv(csv_path)
+
         #ray.shutdown()
 
         ds = ImageDataset(data_dir, csv_file, img_format='png16',
@@ -366,20 +354,20 @@ def run():
         ray.shutdown()
 
         # Saving computations
-        pickle_file = os.path.join(save_dir, out_csv_file+'FROC.p')
+        pickle_file = os.path.join(save_dir, 'FROC.pkl')
         pickle.dump(data_dict, open( pickle_file, "wb" ) )
 
     # Build FROC curve
     if graph_only:
         # Load data
-        pickle_file = os.path.join(save_dir, out_csv_file+'FROC.p')
+        pickle_file = os.path.join(save_dir, 'FROC.pkl')
         data_dict = pickle.load( open( pickle_file, "rb" ) )
         if per_unit_area:
             total_area = data_dict['total_area']
     data_computed = data_dict['dataframe']
 
 
-    save_path = os.path.join(save_dir,'{}FROC.png'.format(out_csv_file))
+    save_path = os.path.join(save_dir,'FROC.png')
     if per_unit_area:
         pauc=make_froc_graphs([pickle_file],[model_name], ['blue'],
             max_FP=1, bootstraps=100, save=save_path)
