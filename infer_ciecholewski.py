@@ -25,6 +25,7 @@ def run():
     csv_file = config_dict['val_csv']
     save_dir = config_dict['save_dir']
     num_workers = int(config_dict['num_workers'])
+    threshold = float(config_dict['threshold'])
 
     pred_dir = os.path.join(save_dir, 'pred_Ciecholewski/')
     os.makedirs(pred_dir, exist_ok=True)
@@ -44,7 +45,7 @@ def run():
     @ray.remote
     def main_func(idx, ds_id):
         img,  img_name = ds_id.__getitem__(idx)
-        breast_mask = detect_calcifications_whole_image(img, method='Ciecholewski')
+        breast_mask = detect_calcifications_whole_image(img, method='Ciecholewski', thr=threshold)
         img_path = os.path.join(pred_dir,img_name+'.png')
         img_dir = os.path.dirname(img_path)
         os.makedirs(img_dir, exist_ok=True)

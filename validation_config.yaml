@@ -43,6 +43,7 @@ confusion_matrix:
   max_sigma: 2.0
   overlap: 0.0
   hessian_thr: 1.4
+  fill_holes: 0
   # FROC
   graph_only: false # If data already exist and just need plot
   resolution: 0.007 # Needed for using per_unit_area

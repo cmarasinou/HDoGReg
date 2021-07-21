@@ -9,6 +9,8 @@ from hdogreg.dataset import ImageDataset, png16_saver
 from hdogreg.image import blob_detector_hdog
 from hdogreg.utils import arg_parsing
 
+from scipy import ndimage
+
 def run():
     # Load configuration contents
     config_fname = os.path.abspath(os.path.dirname(os.path.realpath(__file__))+'/validation_config.yaml')
@@ -29,6 +31,7 @@ def run():
     max_sigma = float(config_dict['max_sigma'])
     overlap = float(config_dict['overlap'])
     hessian_thr = float(config_dict['hessian_thr'])
+    fill_holes = int(config_dict['fill_holes'])
 
 
     blob_dir = os.path.join(save_dir, 'blob/')
@@ -51,6 +54,8 @@ def run():
         img,  img_name = ds_id.__getitem__(idx)
         blob_mask = blob_detector_hdog(img, min_sigma=min_sigma,max_sigma=max_sigma,
             hessian_thr=hessian_thr, threshold=DoG_thr,overlap=overlap)
+        if fill_holes:
+            blob_mask = ndimage.morphology.binary_fill_holes(blob_mask)
         img_path = os.path.join(blob_dir,img_name+'.png')
         img_dir = os.path.dirname(img_path)
         os.makedirs(img_dir, exist_ok=True)

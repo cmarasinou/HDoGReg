@@ -261,7 +261,6 @@ def run():
     else:
         thr_list = np.linspace(0,radius,20)
         thr_list = [(np.exp(alpha*(1-d/radius))-1)/(np.exp(alpha)-1) for d in thr_list]
-
     hessian_thr = float(config_dict['hessian_thr'])
     comment = config_dict['comment']
     graph_only = int(config_dict['graph_only'])
@@ -305,7 +304,11 @@ def run():
             blob_path = os.path.join(blob_dir,img_name+'.png')
             breast_path = os.path.join(breast_dir,img_name+'.png')
             blob_mask = ds_id._img_to_numpy(blob_path)
-            breast_mask = ds_id._img_to_numpy(breast_path)
+            if not per_unit_area:
+                breast_mask = np.ones_like(blob_mask)
+            else:
+                breast_mask = ds_id._img_to_numpy(breast_path)
+
             pred_fpn_path = os.path.join(pred_fpn_dir,img_name+'.png')
             pred_fpn = ds_id._img_to_numpy(pred_fpn_path)
 
