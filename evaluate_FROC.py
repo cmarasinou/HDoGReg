@@ -214,6 +214,9 @@ def bootstrap_froc(data, max_FP=1, total_area=None,  bootstraps=1000, seed=0):
     for i in range(bootstraps):
         data_sampled = data.sample(len(data), replace=True)
         froc_data = make_froc_data(data_sampled, total_area)
+        x,y = froc_data
+        x, y = np.array(x), np.array(y)
+        froc_data = x[np.argsort(x)], y[np.argsort(x)] 
         froc_list.append(froc_data)
     froc_list = np.array(froc_list)
     return np.std(froc_list[:,1,:],0)
